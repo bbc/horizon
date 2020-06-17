@@ -71,13 +71,14 @@
       - ^openstack_dashboard/dashboards/.*/tests.py$
     vars: &base_vars
       devstack_localrc:
-        TEMPEST_PLUGINS: "{{ ansible_user_dir }}/src/opendev.org/openstack/tempest-horizon"
         USE_PYTHON3: true
       devstack_services:
         horizon: true
         tempest: true
       tempest_concurrency: 2
       tempest_test_regex: horizon
+      tempest_plugins:
+        - tempest-horizon
       tox_envlist: all
 
 - job:
@@ -103,15 +104,15 @@
       tox_envlist: bandit-baseline
     irrelevant-files:
       - ^.*\.rst$
-      - ^.*\locale/.*$
+      - ^.*/locale/.*$
       - ^doc/.*$
       - ^releasenotes/.*$
       - ^setup.cfg$
       - ^tools/.*$
 
 - job:
-    name: nodejs10-npm-run-lint
-    parent: nodejs-npm-run-lint
+    name: horizon-nodejs10-run-lint
+    parent: nodejs-run-lint
     description: |
       Run lint using Node 10 for horizon plugins.
     vars:
@@ -121,8 +122,8 @@
       openstack/horizon
 
 - job:
-    name: nodejs10-npm-run-test
-    parent: nodejs-npm-run-test
+    name: horizon-nodejs10-run-test
+    parent: nodejs-run-test-browser
     description: |
       Run test using Node 10 for horizon plugins.
     vars:
@@ -137,12 +138,12 @@
       Run lint and test jobs using Node 10 (LTS) for horizon plugins.
     check:
       jobs:
-        - nodejs10-npm-run-lint
-        - nodejs10-npm-run-test
+        - horizon-nodejs10-run-lint
+        - horizon-nodejs10-run-test
     gate:
       jobs:
-        - nodejs10-npm-run-lint
-        - nodejs10-npm-run-test
+        - horizon-nodejs10-run-lint
+        - horizon-nodejs10-run-test
 
 - project-template:
     name: horizon-nodejs10-jobs-nonvoting
@@ -150,9 +151,9 @@
       Run lint and test jobs using Node 10 (LTS) for horizon plugins.
     check:
       jobs:
-        - nodejs10-npm-run-lint:
+        - horizon-nodejs10-run-lint:
             voting: false
-        - nodejs10-npm-run-test:
+        - horizon-nodejs10-run-test:
             voting: false
 
 - project-template:
