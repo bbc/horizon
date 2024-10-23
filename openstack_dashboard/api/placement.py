@@ -49,7 +49,7 @@ def make_adapter(request):
         verify = settings.OPENSTACK_SSL_CACERT
     return Adapter(
         session.Session(auth=auth, verify=verify),
-        api_version="placement 1.6",
+        api_version="placement 1.14",
     )
 
 
@@ -95,17 +95,22 @@ def resource_provider_traits(request, uuid):
 
 def get_providers(request):
     providers = resource_providers(request)
+    return_providers = []
     for p in providers:
+        if p['parent_provider_uuid']:
+            continue
         inventories = resource_provider_inventories(request, p['uuid'])
-        usages = resource_provider_usages(request, p['uuid'])
         vcpus = inventories.get('VCPU')
         pcpus = inventories.get('PCPU')
+        if not vcpus and not pcpus:
+            continue
         memory = inventories.get('MEMORY_MB')
         disk = inventories.get('DISK_GB')
         p['inventories'] = inventories
+        usages = resource_provider_usages(request, p['uuid'])
         p['usages'] = usages
-        p['aggregates'] = resource_provider_aggregates(request, p['uuid'])
-        p['traits'] = resource_provider_traits(request, p['uuid'])
+        p['aggregates'] = [] #resource_provider_aggregates(request, p['uuid'])
+        p['traits'] = [] #resource_provider_traits(request, p['uuid'])
 
         p['vcpus_used'] = usages.get('VCPU')
         # Reserved:
@@ -151,4 +156,6 @@ def get_providers(request):
             p.update(disk_gb_reserved=None, disk_gb=None,
                      disk_gb_ar=None, disk_gb_capacity=None)
 
-    return providers
+        return_providers.append(p)
+
+    return return_providers
